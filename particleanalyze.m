@@ -71,7 +71,7 @@ handles.data.selected=-1;
 disp('Modeling intensities ... ')
 %calculate intensities
 for n = 1:size(handles.data.model,2)
-    handles.data.model(n).flags=[];
+    handles.data.model(n).flags={};
     int_2dot = handles.data.model(n).params(:,13)+handles.data.model(n).params(:,17);
     handles.data.model(n).dotI = int_2dot;
     
