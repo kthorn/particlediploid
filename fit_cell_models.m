@@ -126,25 +126,29 @@ for cell = 1:ncells
         
         %generate censored version of results
         %censoring sets negative intensities to 0
-        %and sets coordinates more than 4 pixels outside of the image to
-        %the center of the image (4 pixels is ~ 3sigma)        
-        max_coord = (len*2+1) + 4;
-        min_coord = -4;
+        %and sets coordinates more than 1 pixel outside of the image to
+        %the center of the image
+        %intensities associated with censored coords are set to 0
+        max_xy = (len*2+1) + 1;
+        min_xy = -1;
+        max_z = nz + 1;
+        min_z = -1;
         censored = result;
+        %force negative values to 0
         censored([13,17]) = max(censored([13,17]),0);
-        %loop over X,Y coordinates
-        for C = [10, 11, 14, 15]
-            if censored(C) > max_coord || censored(C) < min_coord
-                censored(C) = len+1;
-            end
+        %test dot 1
+        if any(censored(10,11) > max_xy) || any(censored(10,11) < min_xy) || ...
+                censored(12) > max_z || censored(12) < min_z
+            censored([10,11]) = len+1;
+            censored(12) = round(nz/2);
+            censored(13) = 0;            
         end
-       %now do Z 
-        max_coord = nz + 5;
-        min_coord = -5;
-        for C = [12, 16]
-            if censored(C) > max_coord || censored(C) < min_coord
-                censored(C) = round(nz/2);
-            end
+        %test dot 2
+        if any(censored(14,15) > max_xy) || any(censored(14,15) < min_xy) || ...
+                censored(16) > max_z || censored(16) < min_z
+            censored([14,15]) = len+1;
+            censored(16) = round(nz/2);
+            censored(17) = 0;            
         end
         
         %update coordinates to image space
