@@ -135,18 +135,18 @@ for cell = 1:ncells
         min_z = -1;
         censored = result;
         %force negative values to 0
-        censored([13,17]) = max(censored([13,17]),0);
+        censored(1,[13,17]) = max(censored(1,[13,17]),0);
         %test dot 1
-        if any(censored(10,11) > max_xy) || any(censored(10,11) < min_xy) || ...
+        if any(censored(1,10:11) > max_xy) || any(censored(1,10:11) < min_xy) || ...
                 censored(12) > max_z || censored(12) < min_z
-            censored([10,11]) = len+1;
+            censored(1,[10,11]) = len+1;
             censored(12) = round(nz/2);
             censored(13) = 0;            
         end
         %test dot 2
-        if any(censored(14,15) > max_xy) || any(censored(14,15) < min_xy) || ...
+        if any(censored(1,14:15) > max_xy) || any(censored(1,14:15) < min_xy) || ...
                 censored(16) > max_z || censored(16) < min_z
-            censored([14,15]) = len+1;
+            censored(1,[14,15]) = len+1;
             censored(16) = round(nz/2);
             censored(17) = 0;            
         end
