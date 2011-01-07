@@ -70,16 +70,22 @@ handles.data.selected=-1;
 
 disp('Modeling intensities ... ')
 %calculate intensities
+%model each dot independently
+
 for n = 1:size(handles.data.model,2)
     handles.data.model(n).flags={};
     int_2dot = handles.data.model(n).params(:,13)+handles.data.model(n).params(:,17);
-    handles.data.model(n).dotI = int_2dot;
+    [d1,d2] = reassign_dots(handles.data.model(n).params);
+    handles.data.model(n).dot1_I = d1(:,4);
+    handles.data.model(n).dot2_I = d2(:,4);
     
     %model intensity disappearance
-    handles.data.model(n).modelI = fit_disappearance(handles.data.model(n).dotI');
+    handles.data.model(n).model1_I = fit_disappearance(handles.data.model(n).dot1_I');
+    handles.data.model(n).model2_I = fit_disappearance(handles.data.model(n).dot2_I');
     
     %find potential disappearing dots
-    if (handles.data.model(n).modelI(4)/handles.data.model(n).modelI(1) < 0.3)
+    if (handles.data.model(n).model1_I(4)/handles.data.model(n).model1_I(1) < 0.3)...
+            && (handles.data.model(n).model2_I(4)/handles.data.model(n).model2_I(1) < 0.3)
         handles.data.model = addflag(handles.data.model, n, 'curious');
     end
 end
@@ -118,21 +124,20 @@ function plot_intensity_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 if handles.data.selected > 0
-    int_1dot = handles.data.model(handles.data.selected).params(:,13);
-    int_2dot = handles.data.model(handles.data.selected).params(:,17);    
+    int_1dot = handles.data.model(handles.data.selected).dot1_I;
+    int_2dot = handles.data.model(handles.data.selected).dot2_I;    
     figure(1)
     clf
-    subplot(3,1,1)
+    subplot(2,1,1)
     plot(int_1dot);
-    title('1st dot intensity')
-    subplot(3,1,2)
-    plot(int_2dot);
-    title('2nd dot intensity')
-    subplot(3,1,3)
-    plot(handles.data.model(handles.data.selected).dotI);
     hold on
-    plot(model_results(handles.data.model(handles.data.selected).modelI),'r')
-    title('Summed intensity and fit')
+    plot(model_results(handles.data.model(handles.data.selected).model1_I),'r')
+    title('1st dot intensity')
+    subplot(2,1,2)
+    plot(int_2dot);
+    hold on
+    plot(model_results(handles.data.model(handles.data.selected).model2_I),'r')
+    title('2nd dot intensity')
 end
 guidata(hObject, handles);
 
@@ -456,3 +461,31 @@ else
     set(handles.disappearing_flag, 'Value', get(handles.disappearing_flag, 'Min'));
 end
 update_image(handles.axes,handles.data);
+
+function [new_dot1, new_dot2] = reassign_dots(params)
+%returns new_dot1, new_dot2 which are dot1 and dot2 from the original
+%params sorted to minimize the distance change between time points
+
+prev_dot1 = params(1,10:12);
+prev_dot2 = params(1,14:16);
+new_dot1(1,:) = params(1,10:13);
+new_dot2(1,:) = params(1,14:17);
+
+for t = 2:size(params,1)
+    dot1 = params(t,10:12);
+    dot2 = params(t,14:16);
+    dist11 = sqrt(sum((prev_dot1 - dot1).^2));
+    dist12 = sqrt(sum((prev_dot1 - dot2).^2));
+    dist21 = sqrt(sum((prev_dot2 - dot1).^2));
+    dist22 = sqrt(sum((prev_dot2 - dot2).^2));
+    
+    if (dist11+dist22) < (dist12+dist21);
+        new_dot1(t,:) = params(t,10:13);
+        new_dot2(t,:) = params(t,14:17);
+    else
+        new_dot1(t,:) = params(t,14:17);
+        new_dot2(t,:) = params(t,10:13);
+    end
+    prev_dot1 = new_dot1(t,1:3);
+    prev_dot2 = new_dot2(t,1:3);
+end
