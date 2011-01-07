@@ -13,12 +13,8 @@ end
 
 for n=1:size(temp_anal,2)
     if any(strcmp(temp_anal(n).flags, 'disappearing'))
-        result = temp_anal(n).modelI;
+        result = [temp_anal(n).model1_I, temp_anal(n).model2_I];
         results(j,:)=result;
-        %start and length of disappearence
-        start = temp_anal(n).modelI(2);
-        tlen = temp_anal(n).modelI(3);
-        fxn_2dots(j) = numel(find(temp_anal(n).ndots(start:start+tlen) == 2))/(tlen+1);
         j=j+1;
     end
     
